@@ -1,0 +1,6 @@
+[submodule "Samples/FirstSteps/Libraries/glm"]
+	path = Samples/FirstSteps/Libraries/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "Samples/FirstSteps/Libraries/glfw"]
+	path = Samples/FirstSteps/Libraries/glfw
+	url = https://github.com/glfw/glfw.git
