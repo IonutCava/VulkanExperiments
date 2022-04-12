@@ -7,6 +7,7 @@ namespace Divide {
 
     Application::Application()
     {
+        loadModels();
         createPipelineLayout();
         createPipeline();
         createCommandBuffers();
@@ -37,6 +38,37 @@ namespace Divide {
         if (vkCreatePipelineLayout(_device.device(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create pipeline layout!");
         }
+    }
+
+    namespace {
+        const glm::vec3 red = {1.f, 0.f, 0.f};
+        const glm::vec3 green = {0.f, 1.f, 0.f};
+        const glm::vec3 yellow = {1.f, 1.f, 0.f};
+        void sierpinski(std::vector<Model::Vertex>& vertices,
+                        int depth,
+                        glm::vec2 left,
+                        glm::vec2 right,
+                        glm::vec2 top)
+        {
+            if (depth <= 0) {
+                vertices.push_back({ top, red });
+                vertices.push_back({ right, green });
+                vertices.push_back({ left, yellow });
+            } else {
+                auto leftTop = 0.5f * (left + top);
+                auto rightTop = 0.5f * (right + top);
+                auto leftRight = 0.5f * (left + right);
+                sierpinski(vertices, depth - 1, left, leftRight, leftTop);
+                sierpinski(vertices, depth - 1, leftRight, right, rightTop);
+                sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+            }
+        };
+    };
+
+    void Application::loadModels() {
+        std::vector<Model::Vertex> vertices{};
+        sierpinski(vertices, 2, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
+        _modelPtr = std::make_unique<Model>(_device, vertices);
     }
 
     void Application::createPipeline() {
@@ -83,7 +115,8 @@ namespace Divide {
 
             vkCmdBeginRenderPass(_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
             _pipelinePtr->bind(_commandBuffers[i]);
-            vkCmdDraw(_commandBuffers[i], 3, 1, 0, 0);
+            _modelPtr->bind(_commandBuffers[i]);
+            _modelPtr->draw(_commandBuffers[i]);
 
             vkCmdEndRenderPass(_commandBuffers[i]);
             if (vkEndCommandBuffer(_commandBuffers[i]) != VK_SUCCESS) {

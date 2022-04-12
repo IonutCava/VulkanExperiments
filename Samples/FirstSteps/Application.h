@@ -4,6 +4,7 @@
 #include "Utilities/Pipeline.h"
 #include "Utilities/Device.h"
 #include "Utilities/SwapChain.h"
+#include "Utilities/Model.h"
 
 #include <memory>
 
@@ -23,6 +24,7 @@ namespace Divide {
 
         void run();
     private:
+        void loadModels();
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
@@ -34,5 +36,6 @@ namespace Divide {
         std::unique_ptr<Pipeline> _pipelinePtr;
         VkPipelineLayout _pipelineLayout;
         std::vector<VkCommandBuffer> _commandBuffers;
+        std::unique_ptr<Model> _modelPtr;
     };
 }; //namespace Divide
