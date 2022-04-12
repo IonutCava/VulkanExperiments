@@ -1,9 +1,18 @@
 #include "Application.h"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
 #include <stdexcept>
 #include <array>
 
 namespace Divide {
+
+    struct SimplePushConstantData {
+        glm::vec2 offset;
+        alignas(16) glm::vec3 color;
+    };
 
     Application::Application()
     {
@@ -29,21 +38,28 @@ namespace Divide {
     }
 
     void Application::createPipelineLayout() {
+
+        VkPushConstantRange pushContantRange{};
+        pushContantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushContantRange.offset = 0;
+        pushContantRange.size = sizeof(SimplePushConstantData);
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pSetLayouts = nullptr;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushContantRange;
         if (vkCreatePipelineLayout(_device.device(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create pipeline layout!");
         }
     }
 
     namespace {
-        const glm::vec3 red = {1.f, 0.f, 0.f};
-        const glm::vec3 green = {0.f, 1.f, 0.f};
-        const glm::vec3 yellow = {1.f, 1.f, 0.f};
+        constexpr glm::vec3 red {1.f, 0.f, 0.f};
+        constexpr glm::vec3 green {0.f, 1.f, 0.f};
+        constexpr glm::vec3 yellow {1.f, 1.f, 0.f};
+
         void sierpinski(std::vector<Model::Vertex>& vertices,
                         int depth,
                         glm::vec2 left,
@@ -154,6 +170,9 @@ namespace Divide {
     }
 
     void Application::recordCommandBuffer(const int imageIndex) {
+        static int frame = 0;
+        frame = ++frame % 1000;
+
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -193,7 +212,14 @@ namespace Divide {
 
         _pipelinePtr->bind(_commandBuffers[imageIndex]);
         _modelPtr->bind(_commandBuffers[imageIndex]);
-        _modelPtr->draw(_commandBuffers[imageIndex]);
+
+        for (int j = 0; j < 4; j++) {
+            SimplePushConstantData push{};
+            push.offset = { -0.5f + frame * 0.002f, -0.4f + j * 0.25f };
+            push.color = { 0.f, 0.f, 0.2f + 0.2f * j };
+            vkCmdPushConstants(_commandBuffers[imageIndex], _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+            _modelPtr->draw(_commandBuffers[imageIndex]);
+        }
 
         vkCmdEndRenderPass(_commandBuffers[imageIndex]);
         if (vkEndCommandBuffer(_commandBuffers[imageIndex]) != VK_SUCCESS) {
