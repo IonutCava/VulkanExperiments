@@ -19,11 +19,12 @@ namespace Divide {
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
         };
 
+        Model() = default;
         Model(Device& device, const std::vector<Vertex>& vertices);
         ~Model();
 
         Model(const Model&) = delete;
-        void operator=(const Model&) = delete;
+        Model& operator=(const Model&) = delete;
         Model(Model&&) = delete;
         Model& operator=(Model&&) = delete;
 

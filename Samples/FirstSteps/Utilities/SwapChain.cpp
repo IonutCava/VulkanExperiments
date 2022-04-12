@@ -12,14 +12,17 @@
 namespace Divide {
 
     SwapChain::SwapChain(Device& deviceRef, VkExtent2D extent)
-        : device{ deviceRef }, windowExtent{ extent }
+        : SwapChain(deviceRef, extent, nullptr)
     {
-        createSwapChain();
-        createImageViews();
-        createRenderPass();
-        createDepthResources();
-        createFramebuffers();
-        createSyncObjects();
+    }
+
+    SwapChain::SwapChain(Device& deviceRef, VkExtent2D extent, std::shared_ptr<SwapChain> previous)
+        : device{ deviceRef }, windowExtent{ extent }, _oldSwapChain(previous)
+    {
+        init();
+
+        // clean up old swap chain
+        _oldSwapChain = nullptr;
     }
 
     SwapChain::~SwapChain()
@@ -52,6 +55,15 @@ namespace Divide {
             vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(device.device(), inFlightFences[i], nullptr);
         }
+    }
+
+    void SwapChain::init() {
+        createSwapChain();
+        createImageViews();
+        createRenderPass();
+        createDepthResources();
+        createFramebuffers();
+        createSyncObjects();
     }
 
     VkResult SwapChain::acquireNextImage(uint32_t* imageIndex) {
@@ -161,7 +173,7 @@ namespace Divide {
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
 
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
+        createInfo.oldSwapchain = _oldSwapChain == nullptr ? VK_NULL_HANDLE : _oldSwapChain->swapChain;
 
         if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swap chain!");

@@ -18,7 +18,7 @@ namespace Divide {
         ~Application();
 
         Application(const Application&) = delete;
-        void operator=(const Application&) = delete;
+        Application& operator=(const Application&) = delete;
         Application(Application&&) = delete;
         Application& operator=(Application&&) = delete;
 
@@ -28,11 +28,14 @@ namespace Divide {
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
+        void freeCommandBuffers();
         void drawFrame();
+        void recreateSwapChain();
+        void recordCommandBuffer(int imageIndex);
 
         Window _window{WIDTH, HEIGHT, "Hiya Vulkan"};
         Device _device{_window};
-        SwapChain _swapChain{ _device, _window.getExtent() };
+        std::unique_ptr<SwapChain> _swapChainPtr;
         std::unique_ptr<Pipeline> _pipelinePtr;
         VkPipelineLayout _pipelineLayout;
         std::vector<VkCommandBuffer> _commandBuffers;
