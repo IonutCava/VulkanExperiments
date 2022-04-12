@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "Engine/SimpleRenderSystem.h"
+#include "Utilities/Camera.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -8,6 +9,8 @@
 
 #include <stdexcept>
 #include <array>
+
+constexpr bool USE_ORTHO = false;
 
 namespace Divide {
 
@@ -20,14 +23,23 @@ namespace Divide {
     {
     }
 
-    void Application::run()
-    {
+    void Application::run() {
         SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass() };
+        Camera camera{};
+
         while (!_window.shouldClose()) {
             glfwPollEvents();
+
+            const float aspect = _renderer.getAspectRatio();
+            if constexpr (USE_ORTHO) {
+                camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+            } else {
+                camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.01f, 10.f);
+            }
+
             if (auto commandBuffer = _renderer.beginFrame()) {
                 _renderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(commandBuffer, _gameObjects);
+                simpleRenderSystem.renderGameObjects(commandBuffer, _gameObjects, camera);
                 _renderer.endSwapChainRenderPass(commandBuffer);
                 _renderer.endFrame();
             }
@@ -101,7 +113,7 @@ namespace Divide {
         std::shared_ptr<Model> model = createCubeModel(_device, { .0f, .0f, .0f });
         auto cube = GameObject::CreateGameObject();
         cube._model = model;
-        cube._transform.translation = { .0f, .0f, .5f };
+        cube._transform.translation = { .0f, .0f, 2.5f };
         cube._transform.scale = { .5f, .5f, .5f };
         _gameObjects.push_back(std::move(cube));
     }

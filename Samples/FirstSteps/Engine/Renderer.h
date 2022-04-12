@@ -21,6 +21,7 @@ namespace Divide {
         Renderer& operator=(Renderer&&) = delete;
 
         [[nodiscard]] inline VkRenderPass getSwapChainRenderPass() const { return _swapChainPtr->getRenderPass(); }
+        [[nodiscard]] inline float getAspectRatio() const { return _swapChainPtr->extentAspectRatio(); }
         [[nodiscard]] bool isFrameInProgress() const { return _isFrameStarted; }
 
         [[nodiscard]] inline VkCommandBuffer getCurrentCommandBuffer() const {

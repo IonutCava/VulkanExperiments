@@ -3,6 +3,8 @@
 #include "../Utilities/Pipeline.h"
 #include "../Utilities/Device.h"
 #include "../Utilities/Model.h"
+#include "../Utilities/Camera.h"
+
 #include "GameObject.h"
 
 #include <memory>
@@ -18,7 +20,7 @@ namespace Divide {
         SimpleRenderSystem(SimpleRenderSystem&&) = delete;
         SimpleRenderSystem& operator=(SimpleRenderSystem&&) = delete;
 
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera);
 
     private:
         void createPipelineLayout();

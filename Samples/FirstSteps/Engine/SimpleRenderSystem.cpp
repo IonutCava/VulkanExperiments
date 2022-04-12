@@ -56,7 +56,7 @@ namespace Divide {
         _pipelinePtr = std::make_unique<Pipeline>(_device, "Shaders/simple.vert.spv", "Shaders/simple.frag.spv", pipelineConfig);
     }
 
-    void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects) {
+    void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera) {
         _pipelinePtr->bind(commandBuffer);
 
         for (auto& obj : gameObjects) {
@@ -65,7 +65,7 @@ namespace Divide {
 
             SimplePushConstantData push{};
             push.color = obj._colour;
-            push.transform = obj._transform.mat4();
+            push.transform = camera.getProjection() * obj._transform.mat4();
 
             vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
             obj._model->bind(commandBuffer);

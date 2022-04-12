@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("FirstSteps")
 # Add source to this project's executable.
-add_executable (FirstSteps "FirstSteps.cpp" "FirstSteps.h" "Utilities/Window.h" "Utilities/Window.cpp" "Application.h" "Application.cpp" "Utilities/Pipeline.h" "Utilities/Pipeline.cpp" "Utilities/Device.h" "Utilities/Device.cpp" "Utilities/SwapChain.h" "Utilities/SwapChain.cpp" "Utilities/Model.h" "Utilities/Model.cpp" "Engine/GameObject.h" "Engine/Renderer.h" "Engine/Renderer.cpp" "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp")
+add_executable (FirstSteps "FirstSteps.cpp" "FirstSteps.h" "Utilities/Window.h" "Utilities/Window.cpp" "Application.h" "Application.cpp" "Utilities/Pipeline.h" "Utilities/Pipeline.cpp" "Utilities/Device.h" "Utilities/Device.cpp" "Utilities/SwapChain.h" "Utilities/SwapChain.cpp" "Utilities/Model.h" "Utilities/Model.cpp" "Engine/GameObject.h" "Engine/Renderer.h" "Engine/Renderer.cpp" "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp" "Utilities/Camera.h" "Utilities/Camera.cpp")
 
 # C/C++ languages required.
 enable_language(C)
@@ -15,13 +15,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 
 set(ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.204.1")
 find_package(Vulkan REQUIRED)
@@ -62,7 +58,7 @@ foreach(source IN LISTS SHADERS)
 endforeach()
 
 add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})
-
+target_compile_features(FirstSteps PRIVATE cxx_std_17)
 target_include_directories(FirstSteps PUBLIC "C:/VulkanSDK/1.3.204.1/Include")
 target_link_libraries(FirstSteps ${Vulkan_LIBRARIES})
 
