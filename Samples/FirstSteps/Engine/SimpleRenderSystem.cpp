@@ -11,8 +11,7 @@
 namespace Divide {
 
     struct SimplePushConstantData {
-        glm::mat2 transform{ 1.f };
-        glm::vec2 offset;
+        glm::mat4 transform{ 1.f };
         alignas(16) glm::vec3 color;
     };
 
@@ -61,12 +60,12 @@ namespace Divide {
         _pipelinePtr->bind(commandBuffer);
 
         for (auto& obj : gameObjects) {
-            obj._transform2D.rotation = glm::mod(obj._transform2D.rotation + 0.01f, glm::two_pi<float>());
+            obj._transform.rotation.y = glm::mod(obj._transform.rotation.y + 0.01f, glm::two_pi<float>());
+            obj._transform.rotation.x = glm::mod(obj._transform.rotation.x + 0.005f, glm::two_pi<float>());
 
             SimplePushConstantData push{};
-            push.offset = obj._transform2D.translation;
             push.color = obj._colour;
-            push.transform = obj._transform2D.mat2();
+            push.transform = obj._transform.mat4();
 
             vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
             obj._model->bind(commandBuffer);

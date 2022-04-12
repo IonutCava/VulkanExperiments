@@ -37,42 +37,72 @@ namespace Divide {
     }
 
     namespace {
-        constexpr glm::vec3 red {1.f, 0.f, 0.f};
-        constexpr glm::vec3 green {0.f, 1.f, 0.f};
-        constexpr glm::vec3 yellow {1.f, 1.f, 0.f};
+        // temporary helper function, creates a 1x1x1 cube centered at offset
+        std::unique_ptr<Model> createCubeModel(Device& device, glm::vec3 offset) {
+            std::vector<Model::Vertex> vertices{
 
-        void sierpinski(std::vector<Model::Vertex>& vertices,
-                        int depth,
-                        glm::vec2 left,
-                        glm::vec2 right,
-                        glm::vec2 top)
-        {
-            if (depth <= 0) {
-                vertices.push_back({ top, red });
-                vertices.push_back({ right, green });
-                vertices.push_back({ left, yellow });
-            } else {
-                auto leftTop = 0.5f * (left + top);
-                auto rightTop = 0.5f * (right + top);
-                auto leftRight = 0.5f * (left + right);
-                sierpinski(vertices, depth - 1, left, leftRight, leftTop);
-                sierpinski(vertices, depth - 1, leftRight, right, rightTop);
-                sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+                // left face (white)
+                {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+                {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+                {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+                {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+                {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+                {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+
+                // right face (yellow)
+                {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+                {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+                {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+                {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+                {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+                {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+
+                // top face (orange, remember y axis points down)
+                {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+                {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+                {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+                {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+                {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+                {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+
+                // bottom face (red)
+                {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+                {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+                {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+                {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+                {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+                {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+
+                // nose face (blue)
+                {{-.5f, -.5f, 0.5f}, {.1f, .3f, .8f}},
+                {{.5f, .5f, 0.5f}, {.1f, .3f, .8f}},
+                {{-.5f, .5f, 0.5f}, {.1f, .3f, .8f}},
+                {{-.5f, -.5f, 0.5f}, {.1f, .3f, .8f}},
+                {{.5f, -.5f, 0.5f}, {.1f, .3f, .8f}},
+                {{.5f, .5f, 0.5f}, {.1f, .3f, .8f}},
+
+                // tail face (green)
+                {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+                {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+                {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+                {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+                {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+                {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+
+            };
+            for (auto& v : vertices) {
+                v.position += offset;
             }
-        };
+            return std::make_unique<Model>(device, vertices);
+        }
     };
 
     void Application::loadGameObjects() {
-        std::vector<Model::Vertex> vertices{};
-        sierpinski(vertices, 2, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
-        auto modelPtr = std::make_shared<Model>(_device, vertices);
-
-        auto triangle = GameObject::CreateGameObject();
-        triangle._model = modelPtr;
-        triangle._colour = { .1f, .8f, .1f };
-        triangle._transform2D.translation.x = .2f;
-        triangle._transform2D.scale = { 2.f, 3.f };
-        triangle._transform2D.rotation = .25f * glm::two_pi<float>();
-        _gameObjects.push_back(std::move(triangle));
+        std::shared_ptr<Model> model = createCubeModel(_device, { .0f, .0f, .0f });
+        auto cube = GameObject::CreateGameObject();
+        cube._model = model;
+        cube._transform.translation = { .0f, .0f, .5f };
+        cube._transform.scale = { .5f, .5f, .5f };
+        _gameObjects.push_back(std::move(cube));
     }
 }; //namespace Divide
