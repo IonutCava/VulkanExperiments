@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("FirstSteps")
 # Add source to this project's executable.
-add_executable (FirstSteps "FirstSteps.cpp" "FirstSteps.h" "Utilities/Window.h" "Utilities/Window.cpp" "Application.h" "Application.cpp" "Utilities/Pipeline.h" "Utilities/Pipeline.cpp" "Utilities/Device.h" "Utilities/Device.cpp" "Utilities/SwapChain.h" "Utilities/SwapChain.cpp" "Utilities/Model.h" "Utilities/Model.cpp")
+add_executable (FirstSteps "FirstSteps.cpp" "FirstSteps.h" "Utilities/Window.h" "Utilities/Window.cpp" "Application.h" "Application.cpp" "Utilities/Pipeline.h" "Utilities/Pipeline.cpp" "Utilities/Device.h" "Utilities/Device.cpp" "Utilities/SwapChain.h" "Utilities/SwapChain.cpp" "Utilities/Model.h" "Utilities/Model.cpp" "Engine/GameObject.h")
 
 # C/C++ languages required.
 enable_language(C)

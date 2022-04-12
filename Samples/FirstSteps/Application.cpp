@@ -3,6 +3,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <stdexcept>
 #include <array>
@@ -10,13 +11,14 @@
 namespace Divide {
 
     struct SimplePushConstantData {
+        glm::mat2 transform{1.f};
         glm::vec2 offset;
         alignas(16) glm::vec3 color;
     };
 
     Application::Application()
     {
-        loadModels();
+        loadGameObjects();
         createPipelineLayout();
         recreateSwapChain();
         createCommandBuffers();
@@ -81,10 +83,18 @@ namespace Divide {
         };
     };
 
-    void Application::loadModels() {
+    void Application::loadGameObjects() {
         std::vector<Model::Vertex> vertices{};
         sierpinski(vertices, 2, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
-        _modelPtr = std::make_unique<Model>(_device, vertices);
+        auto modelPtr = std::make_shared<Model>(_device, vertices);
+
+        auto triangle = GameObject::CreateGameObject();
+        triangle._model = modelPtr;
+        triangle._colour = { .1f, .8f, .1f };
+        triangle._transform2D.translation.x = .2f;
+        triangle._transform2D.scale = { 2.f, 3.f };
+        triangle._transform2D.rotation = .25f * glm::two_pi<float>();
+        _gameObjects.push_back(std::move(triangle));
     }
 
     void Application::createPipeline() {
@@ -170,9 +180,6 @@ namespace Divide {
     }
 
     void Application::recordCommandBuffer(const int imageIndex) {
-        static int frame = 0;
-        frame = ++frame % 1000;
-
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -210,16 +217,7 @@ namespace Divide {
 
         vkCmdSetScissor(_commandBuffers[imageIndex], 0, 1, &scissor);
 
-        _pipelinePtr->bind(_commandBuffers[imageIndex]);
-        _modelPtr->bind(_commandBuffers[imageIndex]);
-
-        for (int j = 0; j < 4; j++) {
-            SimplePushConstantData push{};
-            push.offset = { -0.5f + frame * 0.002f, -0.4f + j * 0.25f };
-            push.color = { 0.f, 0.f, 0.2f + 0.2f * j };
-            vkCmdPushConstants(_commandBuffers[imageIndex], _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-            _modelPtr->draw(_commandBuffers[imageIndex]);
-        }
+        renderGameObjects(_commandBuffers[imageIndex]);
 
         vkCmdEndRenderPass(_commandBuffers[imageIndex]);
         if (vkEndCommandBuffer(_commandBuffers[imageIndex]) != VK_SUCCESS) {
@@ -227,4 +225,20 @@ namespace Divide {
         }
     }
 
+    void Application::renderGameObjects(VkCommandBuffer commandBuffer) {
+        _pipelinePtr->bind(commandBuffer);
+
+        for (auto& obj : _gameObjects) {
+            obj._transform2D.rotation = glm::mod(obj._transform2D.rotation + 0.01f, glm::two_pi<float>());
+
+            SimplePushConstantData push{};
+            push.offset = obj._transform2D.translation;
+            push.color = obj._colour;
+            push.transform = obj._transform2D.mat2();
+
+            vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+            obj._model->bind(commandBuffer);
+            obj._model->draw(commandBuffer);
+        }
+    }
 }; //namespace Divide

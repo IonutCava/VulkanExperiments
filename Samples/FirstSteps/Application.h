@@ -5,6 +5,7 @@
 #include "Utilities/Device.h"
 #include "Utilities/SwapChain.h"
 #include "Utilities/Model.h"
+#include "Engine/GameObject.h"
 
 #include <memory>
 
@@ -23,8 +24,9 @@ namespace Divide {
         Application& operator=(Application&&) = delete;
 
         void run();
+
     private:
-        void loadModels();
+        void loadGameObjects();
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
@@ -32,6 +34,7 @@ namespace Divide {
         void drawFrame();
         void recreateSwapChain();
         void recordCommandBuffer(int imageIndex);
+        void renderGameObjects(VkCommandBuffer commandBuffer);
 
         Window _window{WIDTH, HEIGHT, "Hiya Vulkan"};
         Device _device{_window};
@@ -39,6 +42,6 @@ namespace Divide {
         std::unique_ptr<Pipeline> _pipelinePtr;
         VkPipelineLayout _pipelineLayout;
         std::vector<VkCommandBuffer> _commandBuffers;
-        std::unique_ptr<Model> _modelPtr;
+        std::vector<GameObject> _gameObjects;
     };
 }; //namespace Divide
