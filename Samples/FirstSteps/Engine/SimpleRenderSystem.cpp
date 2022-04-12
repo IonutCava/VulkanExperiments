@@ -59,13 +59,15 @@ namespace Divide {
     void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GameObject>& gameObjects, const Camera& camera) {
         _pipelinePtr->bind(commandBuffer);
 
+        const auto projectionView = camera.getProjection() * camera.getView();
+
         for (auto& obj : gameObjects) {
             obj._transform.rotation.y = glm::mod(obj._transform.rotation.y + 0.01f, glm::two_pi<float>());
             obj._transform.rotation.x = glm::mod(obj._transform.rotation.x + 0.005f, glm::two_pi<float>());
 
             SimplePushConstantData push{};
             push.color = obj._colour;
-            push.transform = camera.getProjection() * obj._transform.mat4();
+            push.transform = projectionView * obj._transform.mat4();
 
             vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
             obj._model->bind(commandBuffer);

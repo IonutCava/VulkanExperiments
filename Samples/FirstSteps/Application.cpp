@@ -26,6 +26,8 @@ namespace Divide {
     void Application::run() {
         SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass() };
         Camera camera{};
+        //camera.setViewDirection(glm::vec3{ 0.f }, glm::vec3{ .5f, 0.f, 1.f });
+        camera.setViewTarget(glm::vec3(-1.f, -2.f, -20.f), glm::vec3(0.f, 0.f, 2.5f));
 
         while (!_window.shouldClose()) {
             glfwPollEvents();
@@ -34,7 +36,7 @@ namespace Divide {
             if constexpr (USE_ORTHO) {
                 camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
             } else {
-                camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.01f, 10.f);
+                camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.01f, 100.f);
             }
 
             if (auto commandBuffer = _renderer.beginFrame()) {
