@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Utilities/Window.h"
-#include "Utilities/Pipeline.h"
 #include "Utilities/Device.h"
-#include "Utilities/SwapChain.h"
 #include "Utilities/Model.h"
 #include "Engine/GameObject.h"
+#include "Engine/Renderer.h"
 
 #include <memory>
 
@@ -27,21 +26,11 @@ namespace Divide {
 
     private:
         void loadGameObjects();
-        void createPipelineLayout();
-        void createPipeline();
-        void createCommandBuffers();
-        void freeCommandBuffers();
-        void drawFrame();
-        void recreateSwapChain();
-        void recordCommandBuffer(int imageIndex);
-        void renderGameObjects(VkCommandBuffer commandBuffer);
 
         Window _window{WIDTH, HEIGHT, "Hiya Vulkan"};
         Device _device{_window};
-        std::unique_ptr<SwapChain> _swapChainPtr;
-        std::unique_ptr<Pipeline> _pipelinePtr;
-        VkPipelineLayout _pipelineLayout;
-        std::vector<VkCommandBuffer> _commandBuffers;
+        Renderer _renderer{ _window, _device };
+
         std::vector<GameObject> _gameObjects;
     };
 }; //namespace Divide

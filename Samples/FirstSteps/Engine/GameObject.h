@@ -2,6 +2,8 @@
 
 #include "../Utilities/Model.h"
 
+#include <memory>
+
 namespace Divide {
     struct Transform2DComponent {
         glm::vec2 translation{};
