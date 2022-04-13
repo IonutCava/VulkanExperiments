@@ -102,6 +102,7 @@ namespace Divide {
                 GlobalUbo ubo{};
                 ubo.projectionMatrix = camera.getProjection();
                 ubo.viewMatrix = camera.getView();
+                ubo.inverseViewMatrix = camera.getInverseView();
 
                 pointLightSystem.update(frameInfo, ubo);
 

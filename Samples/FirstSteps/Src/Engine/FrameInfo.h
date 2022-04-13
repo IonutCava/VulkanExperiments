@@ -16,6 +16,7 @@ namespace Divide {
     struct GlobalUbo {
         glm::mat4 projectionMatrix{ 1.f };
         glm::mat4 viewMatrix{ 1.f };
+        glm::mat4 inverseViewMatrix{ 1.f };
         glm::vec4 ambientLightColour{ 1.f, 1.f, 1.f, .02f };
         PointLight pointLights[MAX_LIGHTS];
         int numLights = 0;

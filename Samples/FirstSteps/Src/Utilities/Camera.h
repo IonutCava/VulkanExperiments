@@ -16,10 +16,11 @@ namespace Divide {
 
         [[nodiscard]] inline const glm::mat4& getProjection() const { return _projectionMatrix; }
         [[nodiscard]] inline const glm::mat4& getView() const { return _viewMatrix; }
+        [[nodiscard]] inline const glm::mat4& getInverseView() const { return _inverseViewMatrix; }
 
     private:
         glm::mat4 _projectionMatrix{ 1.f };
         glm::mat4 _viewMatrix{ 1.f };
-
+        glm::mat4 _inverseViewMatrix{ 1.f };
     };
 }; //namespace Divide
