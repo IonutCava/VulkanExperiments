@@ -22,6 +22,7 @@ namespace Divide {
         void resetWindowResizedFlag() { _framebufferResized = false; }
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
+        [[nodiscard]] inline GLFWwindow* getGLFWWindow() const { return _handle; }
     private:
         static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
         void initWindow();

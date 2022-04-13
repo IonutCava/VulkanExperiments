@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Engine/SimpleRenderSystem.h"
 #include "Utilities/Camera.h"
+#include "Engine/KeyboardInputController.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -10,7 +11,10 @@
 #include <stdexcept>
 #include <array>
 
+#include <chrono>
+
 constexpr bool USE_ORTHO = false;
+constexpr float MAX_FRAME_TIME = 0.33f;
 
 namespace Divide {
 
@@ -26,11 +30,23 @@ namespace Divide {
     void Application::run() {
         SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass() };
         Camera camera{};
-        //camera.setViewDirection(glm::vec3{ 0.f }, glm::vec3{ .5f, 0.f, 1.f });
-        camera.setViewTarget(glm::vec3(-1.f, -2.f, -20.f), glm::vec3(0.f, 0.f, 2.5f));
+
+        auto viewerObject = GameObject::CreateGameObject();
+        KeyboardInputController cameraController{};
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
 
         while (!_window.shouldClose()) {
             glfwPollEvents();
+
+            auto newTime = std::chrono::high_resolution_clock::now();
+            float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+            currentTime = newTime;
+
+            frameTime = glm::min(frameTime, MAX_FRAME_TIME);
+
+            cameraController.moveInPlaneXZ(_window.getGLFWWindow(), frameTime, viewerObject);
+            camera.setViewYXZ(viewerObject._transform.translation, viewerObject._transform.rotation);
 
             const float aspect = _renderer.getAspectRatio();
             if constexpr (USE_ORTHO) {
