@@ -56,4 +56,14 @@ namespace Divide {
                 invScale.z * (c1 * c2),
             }};
     }
+
+    GameObject GameObject::MakePointLight(const float intensity, const float radius, const glm::vec3 colour) {
+        GameObject gameObj = GameObject::CreateGameObject();
+        gameObj._colour = colour;
+        gameObj._transform.scale.x = radius;
+        gameObj._pointLightPtr = std::make_unique<PointLightComponent>();
+        gameObj._pointLightPtr->lightIntensity = intensity;
+
+        return gameObj;
+    }
 }; //namespace Divide

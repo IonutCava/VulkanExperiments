@@ -21,7 +21,8 @@ namespace Divide {
         PointLightSystem(PointLightSystem&&) = delete;
         PointLightSystem& operator=(PointLightSystem&&) = delete;
 
-        void render(FrameInfo& frameInf);
+        void update(FrameInfo& frameInfo, GlobalUbo& ubo);
+        void render(FrameInfo& frameInfo);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);

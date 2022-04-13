@@ -19,14 +19,6 @@ constexpr float MAX_FRAME_TIME = 0.33f;
 
 namespace Divide {
 
-    struct GlobalUbo {
-        glm::mat4 projectionMatrix{ 1.f };
-        glm::mat4 viewMatrix{ 1.f };
-        glm::vec4 ambientLightColour{ 1.f, 1.f, 1.f, .02f };
-        glm::vec3 lightPosition{ -1.f };
-        alignas(16) glm::vec4 lightColour{ 1.f }; //w -> intensity
-    };
-
     Application::Application()
     {
         _globalPoolPtr = DescriptorPool::Builder(_device)
@@ -110,9 +102,12 @@ namespace Divide {
                 GlobalUbo ubo{};
                 ubo.projectionMatrix = camera.getProjection();
                 ubo.viewMatrix = camera.getView();
+
+                pointLightSystem.update(frameInfo, ubo);
+
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
-
+                
                 // render
                 _renderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(frameInfo);
@@ -150,5 +145,22 @@ namespace Divide {
             gameObject._transform.scale = glm::vec3(3.f);
             _gameObjects.emplace(gameObject.getId(), std::move(gameObject));
         }
+        
+         const std::vector<glm::vec3> lightColours{
+              {1.f, .1f, .1f},
+              {.1f, .1f, 1.f},
+              {.1f, 1.f, .1f},
+              {1.f, 1.f, .1f},
+              {.1f, 1.f, 1.f},
+              {1.f, 1.f, 1.f}  //
+         };
+
+         for (size_t i = 0; i < lightColours.size(); ++i) {
+             auto pointLight = GameObject::MakePointLight(0.2f);
+             pointLight._colour = lightColours[i];
+             auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColours.size(), {0.f, -1.f, 0.f});
+             pointLight._transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+             _gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+         }
     }
 }; //namespace Divide

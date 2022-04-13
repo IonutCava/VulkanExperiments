@@ -16,6 +16,10 @@ namespace Divide {
         [[nodiscard]] glm::mat3 normalMatrix() const;
     };
 
+    struct PointLightComponent {
+        float lightIntensity = 1.f;
+    };
+
     class GameObject {
     public:
         using id_t = unsigned int;
@@ -26,8 +30,10 @@ namespace Divide {
             return GameObject{ currentId++ };
         }
 
+        static GameObject MakePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 colour = glm::vec3(1.f));
+
         //GameObject(const GameObject&) = delete;
-        GameObject& operator=(const GameObject&) = delete;
+        //GameObject& operator=(const GameObject&) = delete;
         //GameObject(GameObject&&) = delete;
         //GameObject& operator=(GameObject&&) = delete;
 
@@ -37,6 +43,7 @@ namespace Divide {
         glm::vec3 _colour{};
         TransformComponent _transform{};
 
+        std::unique_ptr<PointLightComponent> _pointLightPtr = nullptr;
     private:
         GameObject(const id_t objId) : _id(objId) {}
 

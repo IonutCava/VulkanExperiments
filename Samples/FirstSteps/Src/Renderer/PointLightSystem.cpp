@@ -10,6 +10,12 @@
 
 namespace Divide {
 
+    struct PointLightPushConstants {
+        glm::vec4 position{};
+        glm::vec4 colour{};
+        float radius = 0.1f;
+    };
+
     PointLightSystem::PointLightSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
         : _device{device}
     {
@@ -24,10 +30,10 @@ namespace Divide {
 
     void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
 
-        /*VkPushConstantRange pushContantRange{};
+        VkPushConstantRange pushContantRange{};
         pushContantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushContantRange.offset = 0;
-        pushContantRange.size = sizeof(SimplePushConstantData);*/
+        pushContantRange.size = sizeof(PointLightPushConstants);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
@@ -35,8 +41,8 @@ namespace Divide {
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushContantRange;
         if (vkCreatePipelineLayout(_device.device(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create pipeline layout!");
         }
@@ -55,6 +61,29 @@ namespace Divide {
         _pipelinePtr = std::make_unique<Pipeline>(_device, "Shaders/point_light.vert.spv", "Shaders/point_light.frag.spv", pipelineConfig);
     }
 
+    void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
+        int lightIndex = 0;
+
+        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime, { 0.f, -1.f, 0.f });
+        for (auto& kv : frameInfo.gameObjects) {
+            auto& obj = kv.second;
+            if (obj._pointLightPtr == nullptr) {
+                continue;
+            }
+
+            assert(lightIndex < MAX_LIGHTS && "Point lights exceeed maximum supported!");
+
+            obj._transform.translation = glm::vec3(rotateLight * glm::vec4(obj._transform.translation, 1.f));
+
+            ubo.pointLights[lightIndex].position = glm::vec4(obj._transform.translation, 1.f);
+            ubo.pointLights[lightIndex].colour = glm::vec4(obj._colour, obj._pointLightPtr->lightIntensity);
+            
+            lightIndex += 1;
+        }
+
+        ubo.numLights = lightIndex;
+    }
+
     void PointLightSystem::render(FrameInfo& frameInfo) {
         _pipelinePtr->bind(frameInfo.commandBuffer);
 
@@ -68,6 +97,26 @@ namespace Divide {
                                 nullptr
         );
 
-        vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+        for (auto& kv : frameInfo.gameObjects) {
+            auto& obj = kv.second;
+            if (obj._pointLightPtr == nullptr) {
+                continue;
+            }
+            PointLightPushConstants push{};
+            push.position = glm::vec4(obj._transform.translation, 1.f);
+            push.colour = glm::vec4(obj._colour, obj._pointLightPtr->lightIntensity);
+            push.radius = obj._transform.scale.x;
+
+            vkCmdPushConstants(
+                frameInfo.commandBuffer,
+                _pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(PointLightPushConstants),
+                &push
+            );
+
+            vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+        }
     }
 }; //namespace Divide
