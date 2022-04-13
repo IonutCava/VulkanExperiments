@@ -74,7 +74,7 @@ namespace Divide {
         for (auto& kv : frameInfo.gameObjects) {
             auto& obj = kv.second;
 
-            if (obj._model) {
+            if (obj._model == nullptr) {
                 continue;
             }
 
