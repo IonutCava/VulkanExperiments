@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../Utilities/Model.h"
+#include "Utilities/Model.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <memory>
+#include <unordered_map>
 
 namespace Divide {
     struct TransformComponent {
@@ -18,6 +19,7 @@ namespace Divide {
     class GameObject {
     public:
         using id_t = unsigned int;
+        using Map = std::unordered_map<id_t, GameObject>;
 
         static GameObject CreateGameObject() {
             static id_t currentId = 0u;

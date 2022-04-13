@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Utilities/Window.h"
-#include "../Utilities/Device.h"
-#include "../Utilities/SwapChain.h"
-#include "../Utilities/Model.h"
+#include "Utilities/Window.h"
+#include "Utilities/Device.h"
+#include "Utilities/SwapChain.h"
+#include "Utilities/Model.h"
 
 #include <memory>
 #include <cassert>

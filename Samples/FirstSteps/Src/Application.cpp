@@ -1,5 +1,5 @@
 #include "Application.h"
-#include "Engine/SimpleRenderSystem.h"
+#include "Renderer/SimpleRenderSystem.h"
 #include "Utilities/Camera.h"
 #include "Utilities/Buffer.h"
 #include "Engine/KeyboardInputController.h"
@@ -53,7 +53,7 @@ namespace Divide {
         }
 
         auto globalSetLayout = DescriptorSetLayout::Builder(_device)
-            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
 
         std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -99,7 +99,8 @@ namespace Divide {
                     frameTime,
                     commandBuffer,
                     camera,
-                    globalDescriptorSets[frameIndex]
+                    globalDescriptorSets[frameIndex],
+                    _gameObjects
                 };
                 
                 // update
@@ -110,7 +111,7 @@ namespace Divide {
 
                 // render
                 _renderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(frameInfo, _gameObjects);
+                simpleRenderSystem.renderGameObjects(frameInfo);
                 _renderer.endSwapChainRenderPass(commandBuffer);
                 _renderer.endFrame();
             }
@@ -126,7 +127,7 @@ namespace Divide {
             gameObject._model = model;
             gameObject._transform.translation = { .5f, .5f, 0.f };
             gameObject._transform.scale = glm::vec3(3.f, 1.5f, 2.5f);
-            _gameObjects.push_back(std::move(gameObject));
+            _gameObjects.emplace(gameObject.getId(), std::move(gameObject));
         }
         {
             std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/flat_vase.obj");
@@ -134,7 +135,7 @@ namespace Divide {
             gameObject._model = model;
             gameObject._transform.translation = { -.5f, .5f, 0.f };
             gameObject._transform.scale = glm::vec3(3.f);
-            _gameObjects.push_back(std::move(gameObject));
+            _gameObjects.emplace(gameObject.getId(), std::move(gameObject));
         }
         {
             std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/quad.obj");
@@ -142,7 +143,7 @@ namespace Divide {
             gameObject._model = model;
             gameObject._transform.translation = { 0.f, .5f, 0.f };
             gameObject._transform.scale = glm::vec3(3.f);
-            _gameObjects.push_back(std::move(gameObject));
+            _gameObjects.emplace(gameObject.getId(), std::move(gameObject));
         }
     }
 }; //namespace Divide

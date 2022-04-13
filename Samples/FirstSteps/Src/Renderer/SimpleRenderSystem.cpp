@@ -58,7 +58,7 @@ namespace Divide {
         _pipelinePtr = std::make_unique<Pipeline>(_device, "Shaders/simple.vert.spv", "Shaders/simple.frag.spv", pipelineConfig);
     }
 
-    void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo, std::vector<GameObject>& gameObjects) {
+    void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
         _pipelinePtr->bind(frameInfo.commandBuffer);
 
         vkCmdBindDescriptorSets(frameInfo.commandBuffer,
@@ -71,12 +71,24 @@ namespace Divide {
                                 nullptr
         );
 
-        for (auto& obj : gameObjects) {
+        for (auto& kv : frameInfo.gameObjects) {
+            auto& obj = kv.second;
+
+            if (obj._model) {
+                continue;
+            }
+
             SimplePushConstantData push{};
             push.modelMatrix = obj._transform.mat4();
             push.normalMatrix = obj._transform.normalMatrix();
 
-            vkCmdPushConstants(frameInfo.commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+            vkCmdPushConstants(frameInfo.commandBuffer,
+                               _pipelineLayout,
+                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                               0,
+                               sizeof(SimplePushConstantData),
+                               &push);
+
             obj._model->bind(frameInfo.commandBuffer);
             obj._model->draw(frameInfo.commandBuffer);
         }

@@ -33,6 +33,6 @@ namespace Divide {
         Renderer _renderer{ _window, _device };
 
         std::unique_ptr<DescriptorPool> _globalPoolPtr{};
-        std::vector<GameObject> _gameObjects;
+        GameObject::Map _gameObjects;
     };
 }; //namespace Divide

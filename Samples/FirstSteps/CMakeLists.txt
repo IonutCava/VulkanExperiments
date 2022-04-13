@@ -5,23 +5,10 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("FirstSteps")
 # Add source to this project's executable.
-add_executable (FirstSteps 
-                "FirstSteps.cpp" "FirstSteps.h" 
-                "Application.h" "Application.cpp" 
-                "Utilities/Window.h" "Utilities/Window.cpp"
-                "Utilities/Pipeline.h" "Utilities/Pipeline.cpp"
-                "Utilities/Device.h" "Utilities/Device.cpp"
-                "Utilities/SwapChain.h" "Utilities/SwapChain.cpp"
-                "Utilities/Model.h" "Utilities/Model.cpp"
-                "Engine/GameObject.h" "Engine/GameObject.cpp"
-                "Engine/Renderer.h" "Engine/Renderer.cpp"
-                "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp"
-                "Utilities/Camera.h" "Utilities/Camera.cpp"
-                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp"
-                "Utilities/Utils.h"
-                "Utilities/Buffer.h" "Utilities/Buffer.cpp"
-                "Engine/FrameInfo.h"
-                "Utilities/Descriptors.h" "Utilities/Descriptors.cpp")
+file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/Src/*.cpp)
+
+add_executable (FirstSteps ${SOURCES})
+target_include_directories(FirstSteps PUBLIC ${PROJECT_SOURCE_DIR}/Src)
 
 # C/C++ languages required.
 enable_language(C)
@@ -36,6 +23,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 target_compile_features(FirstSteps PRIVATE cxx_std_17)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX -D_USE_MATH_DEFINES")
+IF(MSVC)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+ENDIF(MSVC)
 
 set(ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.204.1")
 
@@ -89,6 +81,16 @@ target_compile_features(FirstSteps PRIVATE cxx_std_17)
 
 #Add Vulkan SDK
 find_package(Vulkan REQUIRED)
+IF (Vulkan_LIBRARY)
+    set(Vulkan_FOUND ON)
+    MESSAGE("Using bundled Vulkan library version")
+ENDIF()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
+IF (NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Could not find Vulkan library!")
+ELSE()
+    message(STATUS ${Vulkan_LIBRARY})
+ENDIF()
 target_include_directories(FirstSteps PUBLIC "C:/VulkanSDK/1.3.204.1/Include")
 target_link_libraries(FirstSteps ${Vulkan_LIBRARIES})
 

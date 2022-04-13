@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../Utilities/Pipeline.h"
-#include "../Utilities/Device.h"
-#include "../Utilities/Model.h"
-#include "../Utilities/Camera.h"
+#include "Utilities/Pipeline.h"
+#include "Utilities/Device.h"
+#include "Utilities/Model.h"
+#include "Utilities/Camera.h"
 
-#include "FrameInfo.h"
-#include "GameObject.h"
+#include "Engine/FrameInfo.h"
+#include "Engine/GameObject.h"
 
 #include <memory>
 
@@ -21,7 +21,7 @@ namespace Divide {
         SimpleRenderSystem(SimpleRenderSystem&&) = delete;
         SimpleRenderSystem& operator=(SimpleRenderSystem&&) = delete;
 
-        void renderGameObjects(FrameInfo& frameInfo, std::vector<GameObject>& gameObjects);
+        void renderGameObjects(FrameInfo& frameInf);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);

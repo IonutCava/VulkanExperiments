@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameObject.h"
-#include "../Utilities/Window.h"
+#include "Utilities/Window.h"
 
 namespace Divide {
 
