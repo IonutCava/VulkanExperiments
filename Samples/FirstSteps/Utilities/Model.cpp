@@ -1,6 +1,26 @@
 #include "Model.h"
 
+#include "Utils.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #include <cassert>
+#include <unordered_map>
+
+namespace std {
+    template<>
+    struct hash<Divide::Model::Vertex> {
+        size_t operator()(Divide::Model::Vertex const& vertex) const {
+            size_t seed = 0;
+            Divide::hashCombine(seed, vertex.position, vertex.colour, vertex.normal, vertex.uv);
+            return seed;
+        }
+    };
+};
 
 namespace Divide {
 
@@ -20,6 +40,12 @@ namespace Divide {
             vkDestroyBuffer(_device.device(), _indexBuffer, nullptr);
             vkFreeMemory(_device.device(), _indexBufferMemory, nullptr);
         }
+    }
+
+    std::unique_ptr<Model> Model::createModelFromFile(Device& device, const std::string& filePath) {
+        Builder builder{};
+        builder.loadModel(filePath);
+        return std::make_unique<Model>(device, builder);
     }
 
     void Model::createVertexBuffers(const std::vector<Vertex>& vertices) {
@@ -126,5 +152,66 @@ namespace Divide {
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, colour);
         return attributeDescriptions;
+    }
+
+    void Model::Builder::loadModel(const std::string& filePath) {
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn, err;
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
+            throw std::runtime_error(warn + err);
+        }
+
+        _vertices.clear();
+        _indices.clear();
+
+        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+        for (const auto& shape : shapes) {
+            for (const auto& index : shape.mesh.indices) {
+                Vertex vertex{};
+
+                if (index.vertex_index >= 0) {
+                    vertex.position = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                    };
+
+                    auto colorIndex = 3 * index.vertex_index + 2;
+                    if (colorIndex < attrib.colors.size()) {
+                        vertex.colour = {
+                            attrib.colors[colorIndex - 2],
+                            attrib.colors[colorIndex - 1],
+                            attrib.colors[colorIndex - 0]
+                        };
+                    } else {
+                        vertex.colour = { 1.f, 1.f, 1.f };
+                    }
+                }
+                if (index.normal_index >= 0) {
+                    vertex.normal = {
+                        attrib.normals[3 * index.normal_index + 0],
+                        attrib.normals[3 * index.normal_index + 1],
+                        attrib.normals[3 * index.normal_index + 2]
+                    };
+                }
+                if (index.texcoord_index >= 0) {
+                    vertex.uv = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
+
+                if (uniqueVertices.count(vertex) == 0) {
+                    uniqueVertices[vertex] = static_cast<uint32_t>(_vertices.size());
+                    _vertices.push_back(vertex);
+                }
+
+                _indices.push_back(uniqueVertices[vertex]);
+            }
+        }
     }
 }; //namespace Divide

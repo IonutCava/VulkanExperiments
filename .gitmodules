@@ -4,3 +4,6 @@
 [submodule "Samples/FirstSteps/Libraries/glfw"]
 	path = Samples/FirstSteps/Libraries/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Samples/FirstSteps/Libraries/tinyobjloader"]
+	path = Samples/FirstSteps/Libraries/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git

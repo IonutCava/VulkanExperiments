@@ -5,7 +5,19 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("FirstSteps")
 # Add source to this project's executable.
-add_executable (FirstSteps "FirstSteps.cpp" "FirstSteps.h" "Utilities/Window.h" "Utilities/Window.cpp" "Application.h" "Application.cpp" "Utilities/Pipeline.h" "Utilities/Pipeline.cpp" "Utilities/Device.h" "Utilities/Device.cpp" "Utilities/SwapChain.h" "Utilities/SwapChain.cpp" "Utilities/Model.h" "Utilities/Model.cpp" "Engine/GameObject.h" "Engine/Renderer.h" "Engine/Renderer.cpp" "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp" "Utilities/Camera.h" "Utilities/Camera.cpp" "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp")
+add_executable (FirstSteps 
+                "FirstSteps.cpp" "FirstSteps.h" 
+                "Application.h" "Application.cpp" 
+                "Utilities/Window.h" "Utilities/Window.cpp"
+                "Utilities/Pipeline.h" "Utilities/Pipeline.cpp"
+                "Utilities/Device.h" "Utilities/Device.cpp"
+                "Utilities/SwapChain.h" "Utilities/SwapChain.cpp"
+                "Utilities/Model.h" "Utilities/Model.cpp"
+                "Engine/GameObject.h"
+                "Engine/Renderer.h" "Engine/Renderer.cpp"
+                "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp"
+                "Utilities/Camera.h" "Utilities/Camera.cpp"
+                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp" "Utilities/Utils.h")
 
 # C/C++ languages required.
 enable_language(C)
@@ -19,8 +31,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+target_compile_features(FirstSteps PRIVATE cxx_std_17)
+
 set(ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.204.1")
-find_package(Vulkan REQUIRED)
+
+#Auto shader compile GLSL -> SPIR-V
 find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
 set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Shaders)
 set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
@@ -42,6 +57,11 @@ add_custom_command(
   OUTPUT ${SHADER_BINARY_DIR}
   COMMENT "Creating ${SHADER_BINARY_DIR}"
 )
+
+set(ASSETS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Assets)
+set(ASSETS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${ASSETS_SOURCE_DIR} DESTINATION ${ASSETS_BINARY_DIR})
+
 foreach(source IN LISTS SHADERS)
   get_filename_component(FILENAME ${source} NAME)
   add_custom_command(
@@ -59,14 +79,21 @@ endforeach()
 
 add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})
 target_compile_features(FirstSteps PRIVATE cxx_std_17)
+
+#Add Vulkan SDK
+find_package(Vulkan REQUIRED)
 target_include_directories(FirstSteps PUBLIC "C:/VulkanSDK/1.3.204.1/Include")
 target_link_libraries(FirstSteps ${Vulkan_LIBRARIES})
 
-# config glfw
+# Add and config GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(Libraries/GLFW)
 target_link_libraries(FirstSteps glfw)
 
+# Add and config GLM
 include_directories(Libraries/glm)
+
+# Add and config TinyObjLoader
+include_directories(Libraries/tinyobjloader)
