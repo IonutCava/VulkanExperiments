@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "Renderer/SimpleRenderSystem.h"
+#include "Renderer/PointLightSystem.h"
 #include "Utilities/Camera.h"
 #include "Utilities/Buffer.h"
 #include "Engine/KeyboardInputController.h"
@@ -19,7 +20,8 @@ constexpr float MAX_FRAME_TIME = 0.33f;
 namespace Divide {
 
     struct GlobalUbo {
-        glm::mat4 projectionView{ 1.f };
+        glm::mat4 projectionMatrix{ 1.f };
+        glm::mat4 viewMatrix{ 1.f };
         glm::vec4 ambientLightColour{ 1.f, 1.f, 1.f, .02f };
         glm::vec3 lightPosition{ -1.f };
         alignas(16) glm::vec4 lightColour{ 1.f }; //w -> intensity
@@ -64,7 +66,8 @@ namespace Divide {
                 .build(globalDescriptorSets[i]);
         }
 
-        SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+        SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+        PointLightSystem pointLightSystem{ _device, _renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
         Camera camera{};
 
         auto viewerObject = GameObject::CreateGameObject();
@@ -105,13 +108,15 @@ namespace Divide {
                 
                 // update
                 GlobalUbo ubo{};
-                ubo.projectionView = camera.getProjection() * camera.getView();
+                ubo.projectionMatrix = camera.getProjection();
+                ubo.viewMatrix = camera.getView();
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 // render
                 _renderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(frameInfo);
+                pointLightSystem.render(frameInfo);
                 _renderer.endSwapChainRenderPass(commandBuffer);
                 _renderer.endFrame();
             }

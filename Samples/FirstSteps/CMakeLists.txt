@@ -7,7 +7,7 @@ project ("FirstSteps")
 # Add source to this project's executable.
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/Src/*.cpp)
 
-add_executable (FirstSteps ${SOURCES})
+add_executable (FirstSteps ${SOURCES} "Src/Renderer/PointLightSystem.cpp" "Src/Renderer/PointLightSystem.h")
 target_include_directories(FirstSteps PUBLIC ${PROJECT_SOURCE_DIR}/Src)
 
 # C/C++ languages required.
