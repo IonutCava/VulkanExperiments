@@ -20,7 +20,9 @@ namespace Divide {
 
     struct GlobalUbo {
         glm::mat4 projectionView{ 1.f };
-        glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+        glm::vec4 ambientLightColour{ 1.f, 1.f, 1.f, .02f };
+        glm::vec3 lightPosition{ -1.f };
+        alignas(16) glm::vec4 lightColour{ 1.f }; //w -> intensity
     };
 
     Application::Application()
@@ -66,6 +68,7 @@ namespace Divide {
         Camera camera{};
 
         auto viewerObject = GameObject::CreateGameObject();
+        viewerObject._transform.translation.z = -2.5f;
         KeyboardInputController cameraController{};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -121,7 +124,7 @@ namespace Divide {
             std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/smooth_vase.obj");
             auto gameObject = GameObject::CreateGameObject();
             gameObject._model = model;
-            gameObject._transform.translation = { .5f, .5f, 2.5f };
+            gameObject._transform.translation = { .5f, .5f, 0.f };
             gameObject._transform.scale = glm::vec3(3.f, 1.5f, 2.5f);
             _gameObjects.push_back(std::move(gameObject));
         }
@@ -129,7 +132,15 @@ namespace Divide {
             std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/flat_vase.obj");
             auto gameObject = GameObject::CreateGameObject();
             gameObject._model = model;
-            gameObject._transform.translation = { -.5f, .5f, 2.5f };
+            gameObject._transform.translation = { -.5f, .5f, 0.f };
+            gameObject._transform.scale = glm::vec3(3.f);
+            _gameObjects.push_back(std::move(gameObject));
+        }
+        {
+            std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/quad.obj");
+            auto gameObject = GameObject::CreateGameObject();
+            gameObject._model = model;
+            gameObject._transform.translation = { 0.f, .5f, 0.f };
             gameObject._transform.scale = glm::vec3(3.f);
             _gameObjects.push_back(std::move(gameObject));
         }

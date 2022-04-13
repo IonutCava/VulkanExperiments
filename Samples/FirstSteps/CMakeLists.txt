@@ -63,8 +63,11 @@ add_custom_command(
 )
 
 set(ASSETS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Assets)
-set(ASSETS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${ASSETS_SOURCE_DIR} DESTINATION ${ASSETS_BINARY_DIR})
+set(ASSETS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Assets)
+
+add_custom_command(TARGET FirstSteps PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       ${ASSETS_SOURCE_DIR} ${ASSETS_BINARY_DIR})
 
 foreach(source IN LISTS SHADERS)
   get_filename_component(FILENAME ${source} NAME)
