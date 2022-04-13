@@ -12,7 +12,7 @@ namespace Divide {
 
     struct SimplePushConstantData {
         glm::mat4 transform{ 1.f };
-        alignas(16) glm::vec3 color;
+        glm::mat4 normalMatrix{ 1.f };
     };
 
     SimpleRenderSystem::SimpleRenderSystem(Device& device, VkRenderPass renderPass)
@@ -63,8 +63,9 @@ namespace Divide {
 
         for (auto& obj : gameObjects) {
             SimplePushConstantData push{};
-            push.color = obj._colour;
-            push.transform = projectionView * obj._transform.mat4();
+            const auto modelMatrix = obj._transform.mat4();
+            push.transform = projectionView * modelMatrix;
+            push.normalMatrix = obj._transform.normalMatrix();
 
             vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
             obj._model->bind(commandBuffer);

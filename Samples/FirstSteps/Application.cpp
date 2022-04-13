@@ -67,11 +67,21 @@ namespace Divide {
     }
 
     void Application::loadGameObjects() {
-        std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/smooth_vase.obj");
-        auto gameObject = GameObject::CreateGameObject();
-        gameObject._model = model;
-        gameObject._transform.translation = { .0f, .0f, 2.5f };
-        gameObject._transform.scale = glm::vec3(3.f);
-        _gameObjects.push_back(std::move(gameObject));
+        {
+            std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/smooth_vase.obj");
+            auto gameObject = GameObject::CreateGameObject();
+            gameObject._model = model;
+            gameObject._transform.translation = { .5f, .5f, 2.5f };
+            gameObject._transform.scale = glm::vec3(3.f, 1.5f, 2.5f);
+            _gameObjects.push_back(std::move(gameObject));
+        }
+        {
+            std::shared_ptr<Model> model = Model::createModelFromFile(_device, "Assets/Models/flat_vase.obj");
+            auto gameObject = GameObject::CreateGameObject();
+            gameObject._model = model;
+            gameObject._transform.translation = { -.5f, .5f, 2.5f };
+            gameObject._transform.scale = glm::vec3(3.f);
+            _gameObjects.push_back(std::move(gameObject));
+        }
     }
 }; //namespace Divide

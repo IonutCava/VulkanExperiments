@@ -17,7 +17,7 @@ add_executable (FirstSteps
                 "Engine/Renderer.h" "Engine/Renderer.cpp"
                 "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp"
                 "Utilities/Camera.h" "Utilities/Camera.cpp"
-                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp" "Utilities/Utils.h")
+                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp" "Utilities/Utils.h" "Engine/GameObject.cpp")
 
 # C/C++ languages required.
 enable_language(C)
