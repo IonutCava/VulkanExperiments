@@ -13,11 +13,15 @@ add_executable (FirstSteps
                 "Utilities/Device.h" "Utilities/Device.cpp"
                 "Utilities/SwapChain.h" "Utilities/SwapChain.cpp"
                 "Utilities/Model.h" "Utilities/Model.cpp"
-                "Engine/GameObject.h"
+                "Engine/GameObject.h" "Engine/GameObject.cpp"
                 "Engine/Renderer.h" "Engine/Renderer.cpp"
                 "Engine/SimpleRenderSystem.h" "Engine/SimpleRenderSystem.cpp"
                 "Utilities/Camera.h" "Utilities/Camera.cpp"
-                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp" "Utilities/Utils.h" "Engine/GameObject.cpp")
+                "Engine/KeyboardInputController.h" "Engine/KeyboardInputController.cpp"
+                "Utilities/Utils.h"
+                "Utilities/Buffer.h" "Utilities/Buffer.cpp"
+                "Engine/FrameInfo.h"
+                "Utilities/Descriptors.h" "Utilities/Descriptors.cpp")
 
 # C/C++ languages required.
 enable_language(C)

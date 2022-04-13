@@ -33,13 +33,6 @@ namespace Divide {
 
     Model::~Model()
     {
-        vkDestroyBuffer(_device.device(), _vertexBuffer, nullptr);
-        vkFreeMemory(_device.device(), _vertexBufferMemory, nullptr);
-
-        if (_hasIndexBuffer) {
-            vkDestroyBuffer(_device.device(), _indexBuffer, nullptr);
-            vkFreeMemory(_device.device(), _indexBufferMemory, nullptr);
-        }
     }
 
     std::unique_ptr<Model> Model::createModelFromFile(Device& device, const std::string& filePath) {
@@ -52,31 +45,28 @@ namespace Divide {
         _vertexCount = static_cast<uint32_t>(vertices.size());
         assert(_vertexCount >= 3 && "Vertex count must be at least 3");
 
-        const VkDeviceSize bufferSize = sizeof(vertices[0]) * _vertexCount;
+        constexpr VkDeviceSize vertexSize = sizeof(vertices[0]);
+        const VkDeviceSize bufferSize = vertexSize * _vertexCount;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
+        Buffer stagingBuffer{
+            _device,
+            vertexSize,
+            _vertexCount,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        };
+        stagingBuffer.map();
+        stagingBuffer.writeToBuffer((void*)vertices.data());
         
-        _device.createBuffer(bufferSize,
-                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                             stagingBuffer,
-                             stagingBufferMemory); 
-        void* data;
-        vkMapMemory(_device.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(_device.device(), stagingBufferMemory);
+        _vertexBufferPtr = std::make_unique<Buffer>(
+            _device,
+            vertexSize,
+            _vertexCount,
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
 
-        _device.createBuffer(bufferSize,
-                             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                             _vertexBuffer,
-                             _vertexBufferMemory);
-
-        _device.copyBuffer(stagingBuffer, _vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(_device.device(), stagingBuffer, nullptr);
-        vkFreeMemory(_device.device(), stagingBufferMemory, nullptr);
+        _device.copyBuffer(stagingBuffer.getBuffer(), _vertexBufferPtr->getBuffer(), bufferSize);
     }
 
     void Model::createIndexBuffers(const std::vector<uint32_t>& indices) {
@@ -87,40 +77,38 @@ namespace Divide {
             return;
         }
 
-        const VkDeviceSize bufferSize = sizeof(indices[0]) * _indexCount;
+        constexpr VkDeviceSize indexSize = sizeof(indices[0]);
+        const VkDeviceSize bufferSize = indexSize * _indexCount;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        
-        _device.createBuffer(bufferSize,
-                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                             stagingBuffer,
-                             stagingBufferMemory); 
-        void* data;
-        vkMapMemory(_device.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(_device.device(), stagingBufferMemory);
+        Buffer stagingBuffer{
+            _device,
+            indexSize,
+            _indexCount,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        };
 
-        _device.createBuffer(bufferSize,
-                             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                             _indexBuffer,
-                             _indexBufferMemory);
+        stagingBuffer.map();
+        stagingBuffer.writeToBuffer((void*)indices.data());
 
-        _device.copyBuffer(stagingBuffer, _indexBuffer, bufferSize);
+        _indexBufferPtr = std::make_unique<Buffer>(
+            _device,
+            indexSize,
+            _indexCount,
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
 
-        vkDestroyBuffer(_device.device(), stagingBuffer, nullptr);
-        vkFreeMemory(_device.device(), stagingBufferMemory, nullptr);
+        _device.copyBuffer(stagingBuffer.getBuffer(), _indexBufferPtr->getBuffer(), bufferSize);
     }
 
     void Model::bind(VkCommandBuffer commandBuffer) {
-        VkBuffer buffers[] = { _vertexBuffer };
+        VkBuffer buffers[] = { _vertexBufferPtr->getBuffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
         if (_hasIndexBuffer) {
-            vkCmdBindIndexBuffer(commandBuffer, _indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(commandBuffer, _indexBufferPtr->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
         }
     }
 

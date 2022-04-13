@@ -5,6 +5,7 @@
 #include "Utilities/Model.h"
 #include "Engine/GameObject.h"
 #include "Engine/Renderer.h"
+#include "Utilities/Descriptors.h"
 
 #include <memory>
 
@@ -31,6 +32,7 @@ namespace Divide {
         Device _device{_window};
         Renderer _renderer{ _window, _device };
 
+        std::unique_ptr<DescriptorPool> _globalPoolPtr{};
         std::vector<GameObject> _gameObjects;
     };
 }; //namespace Divide

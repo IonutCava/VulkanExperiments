@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Device.h"
+#include "Buffer.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -57,13 +58,11 @@ namespace Divide {
     private:
         Device& _device;
 
-        VkBuffer _vertexBuffer;
-        VkDeviceMemory _vertexBufferMemory;
+        std::unique_ptr<Buffer> _vertexBufferPtr;
         uint32_t _vertexCount = 0u; 
 
         bool _hasIndexBuffer = false;
-        VkBuffer _indexBuffer;
-        VkDeviceMemory _indexBufferMemory;
+        std::unique_ptr<Buffer> _indexBufferPtr;
         uint32_t _indexCount = 0u;
     };
 }; //namespace Divide

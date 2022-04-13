@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Engine/SimpleRenderSystem.h"
 #include "Utilities/Camera.h"
+#include "Utilities/Buffer.h"
 #include "Engine/KeyboardInputController.h"
 
 #define GLM_FORCE_RADIANS
@@ -10,7 +11,6 @@
 
 #include <stdexcept>
 #include <array>
-
 #include <chrono>
 
 constexpr bool USE_ORTHO = false;
@@ -18,8 +18,18 @@ constexpr float MAX_FRAME_TIME = 0.33f;
 
 namespace Divide {
 
+    struct GlobalUbo {
+        glm::mat4 projectionView{ 1.f };
+        glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+    };
+
     Application::Application()
     {
+        _globalPoolPtr = DescriptorPool::Builder(_device)
+            .setMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+            .build();
+
         loadGameObjects();
     }
 
@@ -28,7 +38,31 @@ namespace Divide {
     }
 
     void Application::run() {
-        SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass() };
+        std::vector<std::unique_ptr<Buffer>> uboBuffers(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < uboBuffers.size(); ++i) {
+            uboBuffers[i] = std::make_unique<Buffer>(
+                _device,
+                sizeof(GlobalUbo),
+                1,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+            );
+            uboBuffers[i]->map();
+        }
+
+        auto globalSetLayout = DescriptorSetLayout::Builder(_device)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .build();
+
+        std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < globalDescriptorSets.size(); ++i) {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            DescriptorWriter(*globalSetLayout, *_globalPoolPtr)
+                .writeBuffer(0, &bufferInfo)
+                .build(globalDescriptorSets[i]);
+        }
+
+        SimpleRenderSystem simpleRenderSystem{ _device, _renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
         Camera camera{};
 
         auto viewerObject = GameObject::CreateGameObject();
@@ -56,8 +90,24 @@ namespace Divide {
             }
 
             if (auto commandBuffer = _renderer.beginFrame()) {
+                const int frameIndex = _renderer.getFrameIndex();
+                FrameInfo frameInfo{
+                    frameIndex,
+                    frameTime,
+                    commandBuffer,
+                    camera,
+                    globalDescriptorSets[frameIndex]
+                };
+                
+                // update
+                GlobalUbo ubo{};
+                ubo.projectionView = camera.getProjection() * camera.getView();
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);
+                uboBuffers[frameIndex]->flush();
+
+                // render
                 _renderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(commandBuffer, _gameObjects, camera);
+                simpleRenderSystem.renderGameObjects(frameInfo, _gameObjects);
                 _renderer.endSwapChainRenderPass(commandBuffer);
                 _renderer.endFrame();
             }
