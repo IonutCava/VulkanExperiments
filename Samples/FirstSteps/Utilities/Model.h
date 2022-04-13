@@ -19,8 +19,13 @@ namespace Divide {
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
         };
 
+        struct Builder {
+            std::vector<Vertex> _vertices{};
+            std::vector<uint32_t> _indices{};
+        };
+
         Model() = default;
-        Model(Device& device, const std::vector<Vertex>& vertices);
+        Model(Device& device, const Builder& builder);
         ~Model();
 
         Model(const Model&) = delete;
@@ -33,11 +38,18 @@ namespace Divide {
 
     private:
         void createVertexBuffers(const std::vector<Vertex>& vertices);
+        void createIndexBuffers(const std::vector<uint32_t>& indices);
 
     private:
         Device& _device;
+
         VkBuffer _vertexBuffer;
         VkDeviceMemory _vertexBufferMemory;
-        uint32_t _vertexCount = 0u;
+        uint32_t _vertexCount = 0u; 
+
+        bool _hasIndexBuffer = false;
+        VkBuffer _indexBuffer;
+        VkDeviceMemory _indexBufferMemory;
+        uint32_t _indexCount = 0u;
     };
 }; //namespace Divide
